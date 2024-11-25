@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="shoppingApp">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping List with Prices and Currency</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+</head>
+<body ng-controller="shoppingController">
+
+  <h1>Shopping List</h1>
+
+  <!-- Input for adding items -->
+  <label for="itemInput">Item Name:</label>
+  <input type="text" id="itemInput" ng-model="newItem.name" placeholder="Enter item name">
+
+  <label for="quantityInput">Quantity:</label>
+  <input type="number" id="quantityInput" ng-model="newItem.quantity" placeholder="Enter quantity" min="1">
+
+  <label for="priceInput">Price:</label>
+  <input type="number" id="priceInput" ng-model="newItem.price" placeholder="Enter price per unit" min="0" step="0.01">
+
+  <button ng-click="addItem()">Add</button>
+
+  <h3>Currency:</h3>
+  <select ng-model="currency" ng-options="option.symbol for option in currencyOptions">
+  </select>
+
+  <h3>Your Shopping List:</h3>
+  <ul>
+    <li ng-repeat="item in items track by $index">
+      <strong>{{ item.name }}</strong> - Quantity: {{ item.quantity }} - 
+      <span>Price: {{ item.price * item.quantity | currency:currency.symbol }}</span> 
+      <em>(Added on: {{ item.timestamp | date:'medium' }})</em>
+      <button ng-click="removeItem($index)">Remove</button>
+
+      <!-- Update price of an item -->
+      <label for="newPrice{{ $index }}">Update Price:</label>
+      <input type="number" id="newPrice{{ $index }}" ng-model="newPrice[$index]" placeholder="New Price" min="0" step="0.01">
+      <button ng-click="updatePrice($index, newPrice[$index])">Update</button>
+    </li>
+  </ul>
+
+  <script>
+    // Define the AngularJS application
+    var app = angular.module('shoppingApp', []);
+
+    // Create a custom service using factory
+    app.factory('shoppingListService', function() {
+      var shoppingList = [];
+
+      return {
+        getItems: function() {
+          return shoppingList;
+        },
+        addItem: function(item) {
+          if (item.name && item.quantity > 0 && item.price >= 0) {
+            shoppingList.push({
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price,
+              timestamp: new Date()
+            });
+          }
+        },
+        removeItem: function(index) {
+          shoppingList.splice(index, 1);
+        },
+        updatePrice: function(index, newPrice) {
+          if (newPrice >= 0) {
+            shoppingList[index].price = newPrice;
+          }
+        }
+      };
+    });
+
+    // Inject the custom service into a controller
+    app.controller('shoppingController', function($scope, shoppingListService) {
+      // Fetch the initial shopping list
+      $scope.items = shoppingListService.getItems();
+
+      // Initialize a new item
+      $scope.newItem = { name: '', quantity: null, price: null };
+
+      // Default currency options
+      $scope.currencyOptions = [
+        { symbol: 'USD' },
+        { symbol: 'EUR' },
+        { symbol: 'INR' }
+      ];
+      $scope.currency = $scope.currencyOptions[0]; // Default currency is USD
+
+      // Initialize new price array
+      $scope.newPrice = [];
+
+      // Add an item to the list
+      $scope.addItem = function() {
+        shoppingListService.addItem($scope.newItem);
+        $scope.newItem = { name: '', quantity: null, price: null }; // Reset input fields
+      };
+
+      // Remove an item from the list
+      $scope.removeItem = function(index) {
+        shoppingListService.removeItem(index);
+      };
+
+      // Update the price of an item
+      $scope.updatePrice = function(index, newPrice) {
+        shoppingListService.updatePrice(index, newPrice);
+        $scope.newPrice[index] = ''; // Clear the input field for that index
+      };
+    });
+  </script>
+
+</body>
+</html>
