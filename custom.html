@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="shoppingApp">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping List with Quantity and Timestamp</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+</head>
+<body ng-controller="shoppingController">
+
+  <h1>Shopping List</h1>
+
+  <!-- Input for adding items -->
+  <label for="itemInput">Item Name:</label>
+  <input type="text" id="itemInput" ng-model="newItem.name" placeholder="Enter item name">
+
+  <label for="quantityInput">Quantity:</label>
+  <input type="number" id="quantityInput" ng-model="newItem.quantity" placeholder="Enter quantity" min="1">
+
+  <button ng-click="addItem()">Add</button>
+
+  <h3>Your Shopping List:</h3>
+  <ul>
+    <li ng-repeat="item in items track by $index">
+      <strong>{{ item.name }}</strong> - Quantity: {{ item.quantity }} 
+      <em>(Added on: {{ item.timestamp | date:'medium' }})</em>
+      <button ng-click="removeItem($index)">Remove</button>
+    </li>
+  </ul>
+
+  <script>
+    // Define the AngularJS application
+    var app = angular.module('shoppingApp', []);
+
+    // Create a custom service using factory
+    app.factory('shoppingListService', function() {
+      // The shopping list array
+      var shoppingList = [];
+
+      // Service methods
+      return {
+        getItems: function() {
+          return shoppingList;
+        },
+        addItem: function(item) {
+          if (item.name && item.quantity && item.quantity > 0) {
+            shoppingList.push({
+              name: item.name,
+              quantity: item.quantity,
+              timestamp: new Date()
+            });
+          }
+        },
+        removeItem: function(index) {
+          shoppingList.splice(index, 1);
+        }
+      };
+    });
+
+    // Inject the custom service into a controller
+    app.controller('shoppingController', function($scope, shoppingListService) {
+      // Fetch the initial shopping list
+      $scope.items = shoppingListService.getItems();
+
+      // Initialize a new item
+      $scope.newItem = { name: '', quantity: null };
+
+      // Add an item to the list
+      $scope.addItem = function() {
+        shoppingListService.addItem($scope.newItem);
+        $scope.newItem = { name: '', quantity: null }; // Reset input fields
+      };
+
+      // Remove an item from the list
+      $scope.removeItem = function(index) {
+        shoppingListService.removeItem(index);
+      };
+    });
+  </script>
+
+</body>
+</html>
